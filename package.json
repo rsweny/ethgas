@@ -1,0 +1,14 @@
+{
+  "name": "ethgas",
+  "version": "0.0.0",
+  "description": "A fresh new Architect project!",
+  "scripts": {
+    "start": "npx sandbox"
+  },
+  "devDependencies": {
+    "@architect/architect": "^9.2.2"
+  },
+  "dependencies": {
+    "node-fetch": "^2.6.0"
+  }
+}
