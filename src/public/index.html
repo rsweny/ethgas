@@ -38,7 +38,6 @@
 			border-color: initial;
 			border-image: initial;
 			text-align: center;
-			color: white;
 			overflow: hidden;
 			box-sizing: border-box;
 			flex: 1 0 0px;
@@ -51,17 +50,16 @@
 			flex: 1 1 3.2258%;
 			width: 3.2258%;
 			text-align: center;
-			color: white;
 			line-height: 1.5rem;
 			height: 1.5rem;
 			cursor: pointer;
+			font-size: 10px;
 		}
 
 		.month-header {
 			flex: 1 1 3.2258%;
 			width: 3.2258%;
 			text-align: left;
-			color: white;
 			line-height: 1.5rem;
 			height: 1.5rem;
 		}
@@ -105,7 +103,7 @@
 				gas += `</div>`;
 				const { red, green, blue, alpha } = getRGBA(timeObj);
 				const tTitle = `avg: ${Math.round(timeObj.a)} h: ${Math.round(timeObj.h)} l: ${Math.round(timeObj.l)} tip: ${Math.round(timeObj.f)}`;
-				avgHours += `<div class="time-header" title="${tTitle}" style="width: 90px; background-image: linear-gradient(to right, rgba(0,0,0,0), rgba(${red}, ${green}, ${blue}, ${alpha}));">${i}:00</div>`;
+				avgHours += `<div class="time-header" title="${tTitle}" style="width: 90px; background-image: linear-gradient(to right, rgba(${red}, ${green}, ${blue}, 0.1), rgba(${red}, ${green}, ${blue}, ${alpha}));">${i}:00</div>`;
 			}
 
 			for (let daysAgo = 6; daysAgo >= 0; daysAgo--) {
@@ -132,10 +130,10 @@
 					{
 						const obj = yearData[month][i];
 						if (obj) {
-							console.log(obj);
+							const dayOfWeek = dayNames[(new Date(obj.d + 'T12:00:00.000Z')).getDay()];
 							const lbl = obj.h > 0 ? obj.a : "";
 							const { red, green, blue, alpha } = getRGBA(obj);
-							const title = `${obj.d} | high: ${obj.h},  low: ${obj.l},  tip: ${obj.f}`;
+							const title = `${dayOfWeek} ${obj.d} | high: ${obj.h},  low: ${obj.l},  tip: ${obj.f}`;
 							yearDays += `<div onclick="dayClick('${obj.d}')" title="${title}" class="year-entry" style="background: rgba(${red}, ${green}, ${blue}, ${alpha}">${lbl}</div>`;
 						} else {
 							yearDays += '<div class="year-entry"></div>';
@@ -176,7 +174,7 @@
 			const red = Math.round(Math.min(255, Math.sqrt(obj.h)*8));
 			const green = Math.max(255 - obj.l*3, 0);
 			const blue = Math.round(Math.min(obj.f*9, 255));
-			const alpha = Math.min(Math.round(Math.sqrt(obj.a)*100)/2000, 1);
+			const alpha = Math.min(Math.round(Math.pow(obj.a,0.7)*8)/500, 1);
 			return { red, green, blue, alpha };
 		}
 
@@ -189,9 +187,9 @@
 </head>
 <body bgcolor="#000">
 
-<center><h2>Eth Gas Price History 7 days (Gwei)</h2><small id="lastUpdate"></small></center>
+<center style="margin: 5px 7% 5px 7%;"><h2>Eth Gas Price History 7 days (Gwei)</h2><small id="lastUpdate"></small></center>
 
-<div class="root" style="margin: 5px 8% 5px 8%;">
+<div class="root" style="margin: 5px 7% 5px 7%;">
 	<div style="margin-bottom: 21px;">
 		<div id="hoursHeader" style="display: flex; flex-direction: column; text-align: right;">
 		</div>
@@ -208,14 +206,14 @@
 </div>
 
 
-<div style="display: flex; flex-direction: row; flex-grow: 1; margin: 5px 8% 5px 8%;">
-	<div style="flex: 1 1 85%">
+<div style="display: flex; flex-direction: row; flex-grow: 1; margin: 5px 7% 5px 7%;">
+	<div style="flex: 1 1 90%">
 		<div>
 			<center><h2 style="margin-top: 45px">Eth Gas Price History Year</h2></center>
 			<div id="yearData"></div>
 		</div>
 	</div>
-	<div id="dayPanel" style="flex: 1 1 15%; opacity: 0">
+	<div id="dayPanel" style="flex: 1 1 10%; opacity: 0">
 		<div>
 			<center><h2 style="margin-top: 45px">Hourly Breakdown</h2></center>
 				

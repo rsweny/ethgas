@@ -93,7 +93,7 @@ async function populateYear(db, gasData, year) {
     for (let i = 0; i < res.Items.length; i++) {
       const d = res.Items[i].sk;
       const month = d.substring(5,7);
-      const day = d.substring(8);
+      const day = parseInt(d.substring(8));
       if (!gasYearData[month]) gasYearData[month] = {};
       gasYearData[month][day] = { d: res.Items[i].sk, a: res.Items[i].avg, l: res.Items[i].low, h: res.Items[i].high, f: res.Items[i].avgTip };
     }

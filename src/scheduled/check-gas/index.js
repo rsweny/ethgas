@@ -26,8 +26,6 @@ exports.handler = async function scheduled (event) {
         }
     })
 
-    console.log(result);
-
     if (result.Items?.length)
     {
       const n = result.Items[0].count + 1;
@@ -37,7 +35,7 @@ exports.handler = async function scheduled (event) {
       const low = Math.min(result.Items[0].low, Math.round(curGasFee));
 
       // once per day write a daily summary entry
-      if (hour == 23 && n == 10) {
+      if (hour == 23 && n == 50) {
         await writeDaySummary(db, d, today)
       }
 
