@@ -21,7 +21,7 @@
 		.day-header {
 			padding: 0.2rem 0px;
 			box-sizing: border-box;
-			flex: 1 1 14.2857%;
+			flex: 1 1 14.285%;
 			overflow: hidden;
 			width: 14.2857%;
 		}
@@ -47,35 +47,53 @@
 		}
 
 		.year-entry {
-			flex: 1 1 3.2258%;
-			width: 3.2258%;
+			flex: 0 1 3.1%;
+			min-width: 24px;
 			text-align: center;
+			color: white;
 			line-height: 1.5rem;
 			height: 1.5rem;
 			cursor: pointer;
 			font-size: 10px;
 		}
 
+		.year-entry:hover {
+			opacity: 60%;
+		}
+
 		.month-header {
-			flex: 1 1 3.2258%;
-			width: 3.2258%;
+			flex: 1 1 3.225%;
+			width: 3.225%;
+			min-width: 24px;
 			text-align: left;
 			line-height: 1.5rem;
 			height: 1.5rem;
 		}
 
+		.gasRow {
+			display: flex;
+			flex-direction: row;
+			justify-content: initial;
+		}
+
+		.gasRow:hover {
+			opacity: 60%;
+		}
+
 		#lastUpdate {
 			color: grey;
 			margin: 20px;
+			font-size: 10px;
 		}
 	</style>
 
 	<!-- generated datasets, see deploy-s3 lambda -->
 	<script type="text/javascript" src="gasdata.js"></script>
 	<script type="text/javascript" src="gasyeardata2021.js"></script>
+	<script type="text/javascript" src="gasyeardata2022.js"></script>
 
 	<script>
-		const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+		const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 		const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sept', 'Oct', 'Nov', 'Dec'];
 		let today = new Date();
 		let dayOfWeek = dayNames[today.getUTCDay()];
@@ -87,7 +105,7 @@
 			let days = '';
 			for (let i = 0; i < 24; i++) {
 				hours += `<div class="time-header">${i}:00</div>`;
-				gas += `<div style="display: flex; flex-direction: row; justify-content: initial;">`;
+				gas += `<div class="gasRow">`;
 				const timeObj = { a: 0, h: 0, l: 0, f: 0 };
 				for (let j = 0; j < 7; j++) {
 					const obj = gasData[i][j];
@@ -103,7 +121,7 @@
 				gas += `</div>`;
 				const { red, green, blue, alpha } = getRGBA(timeObj);
 				const tTitle = `avg: ${Math.round(timeObj.a)} h: ${Math.round(timeObj.h)} l: ${Math.round(timeObj.l)} tip: ${Math.round(timeObj.f)}`;
-				avgHours += `<div class="time-header" title="${tTitle}" style="width: 90px; background-image: linear-gradient(to right, rgba(${red}, ${green}, ${blue}, 0.1), rgba(${red}, ${green}, ${blue}, ${alpha}));">${i}:00</div>`;
+				avgHours += `<div class="time-header" title="${tTitle}" style="width: 70px; background-image: linear-gradient(to right, rgba(${red}, ${green}, ${blue}, 0.1), rgba(${red}, ${green}, ${blue}, ${alpha}));">${i}:00</div>`;
 			}
 
 			for (let daysAgo = 6; daysAgo >= 0; daysAgo--) {
@@ -112,19 +130,20 @@
 				days += `<div class="day-header">${dayOfWeek}</div>`;
 			}
 			document.getElementById('hoursHeader').innerHTML = avgHours;
-			document.getElementById('lowerHoursHeader').innerHTML = hours;
+			document.getElementById('dateHoursHeader2021').innerHTML = hours;
+			document.getElementById('dateHoursHeader2022').innerHTML = hours;
 			document.getElementById('daysHeader').innerHTML = days;
 			document.getElementById('gasData').innerHTML = gas;
-			document.getElementById('lastUpdate').innerHTML = `Updates every 10 minutes, last update: ${gasData.lastUpdated}`;
+			document.getElementById('lastUpdate').innerHTML = `Updates every 10 minutes, last update: ${gasData.lastUpdated.substring(0,16)}`;
 		}
 
-		function populateYearChart() {
-			const yearData = gasYearData[2021];
+		function populateYearChart(yr) {
+			const yearData = gasYearData[yr];
 			let yearDays = '';
 			for (let month = 1; month <= 12; month++) {
-				yearDays += `<div style="display: flex; flex-grow: 0;"><div class="month-header">${monthNames[month-1]}</div>`;
-				console.log(`${month} ${yearData[month]}`); 
-				if (yearData[month]) {
+				yearDays += `<div style="display: flex; flex-grow: 1; flex-wrap: wrap; width: 100%"><div class="month-header">${monthNames[month-1]}</div>`;
+				if (yearData && yearData[month]) {
+					console.log(`${month} ${yearData[month]}`); 
 					console.log(yearData[month]);
 					for (let i = 1; i <= 31; i++)
 					{
@@ -142,7 +161,7 @@
 				}
 				yearDays += '</div>';
 			}
-			document.getElementById('yearData').innerHTML = yearDays;
+			document.getElementById('yearData'+yr).innerHTML = yearDays;
 		}
 
 		async function dayClick(day) {
@@ -163,8 +182,8 @@
 					
 					dayStr += `</div>`;
 				}
-				document.getElementById('dayData').innerHTML = dayStr;
-				document.getElementById('dayPanel').style.opacity = 1.0;
+				document.getElementById('dayData'+year).innerHTML = dayStr;
+				document.getElementById('dayPanel'+year).style.opacity = 1.0;
 			} catch(e) {
 				console.log(e);
 			}
@@ -180,16 +199,17 @@
 
 		window.onload = function() {
 			populateWeekChart();
-			populateYearChart();
+			populateYearChart(2022);
+			populateYearChart(2021);
         }
 	</script>
 
 </head>
-<body bgcolor="#000">
+<body bgcolor="#000" style="margin: 5px 7% 5px 7%;">
 
-<center style="margin: 5px 7% 5px 7%;"><h2>Eth Gas Price History 7 days (Gwei)</h2><small id="lastUpdate"></small></center>
+<center><h2>Eth Gas Price History 7 days (Gwei)</h2><small id="lastUpdate"></small></center>
 
-<div class="root" style="margin: 5px 7% 5px 7%;">
+<div class="root">
 	<div style="margin-bottom: 21px;">
 		<div id="hoursHeader" style="display: flex; flex-direction: column; text-align: right;">
 		</div>
@@ -205,25 +225,49 @@
 	</div>
 </div>
 
-
-<div style="display: flex; flex-direction: row; flex-grow: 1; margin: 5px 7% 5px 7%;">
+<div style="display: flex; flex-direction: row; flex-grow: 1;">
 	<div style="flex: 1 1 90%">
 		<div>
-			<center><h2 style="margin-top: 45px">Eth Gas Price History Year</h2></center>
-			<div id="yearData"></div>
+			<center><h2 style="margin-top: 45px">Eth Gas Price History 2022</h2></center>
+			<div id="yearData2022"></div>
 		</div>
 	</div>
-	<div id="dayPanel" style="flex: 1 1 10%; opacity: 0">
+	<div id="dayPanel2022" style="flex: 1 1 10%; opacity: 0">
 		<div>
 			<center><h2 style="margin-top: 45px">Hourly Breakdown</h2></center>
 				
 			<div class="root">
 				<div style="margin-bottom: 21px;">
-					<div id="lowerHoursHeader" style="display: flex; flex-direction: column; text-align: right;">
+					<div id="dateHoursHeader2022" style="display: flex; flex-direction: column; text-align: right;">
 					</div>
 				</div>
 
-				<div id="dayData" style="display: flex; flex-direction: column; width: 100%">
+				<div id="dayData2022" style="display: flex; flex-direction: column; width: 100%">
+				</div>
+			</div>
+
+		</div>
+	</div>
+</div>
+
+<div style="display: flex; flex-direction: row; flex-grow: 1;">
+	<div style="flex: 1 1 90%">
+		<div>
+			<center><h2 style="margin-top: 45px">Eth Gas Price History 2021</h2></center>
+			<div id="yearData2021"></div>
+		</div>
+	</div>
+	<div id="dayPanel2021" style="flex: 1 1 10%; opacity: 0">
+		<div>
+			<center><h2 style="margin-top: 45px">Hourly Breakdown</h2></center>
+				
+			<div class="root">
+				<div style="margin-bottom: 21px;">
+					<div id="dateHoursHeader2021" style="display: flex; flex-direction: column; text-align: right;">
+					</div>
+				</div>
+
+				<div id="dayData2021" style="display: flex; flex-direction: column; width: 100%">
 				</div>
 			</div>
 

@@ -10,7 +10,7 @@ Then visit the URL presented.
 
 ## Hydrate source code
 
-npx arc deploy --dry-run
+npx arc init
 
 ## Deploy staging
 

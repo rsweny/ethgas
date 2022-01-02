@@ -24,7 +24,7 @@ exports.handler = async function scheduled (event) {
   // upload daily summary data
   if (hour > 22)
   {
-    const gasYearData = await populateYear(db, gasData, year);
+    const gasYearData = await populateYear(db, year);
     const codeYearStr = `gasYearData[${year}] = ${JSON.stringify(gasYearData)};\n`;
     await uploadFileToS3(S3_BUCKET, `gasyeardata${year}.js`, Buffer.from(codeYearStr));
 
@@ -79,7 +79,7 @@ async function populateDay(db, dateStr) {
   return gasDayData;
 }
 
-async function populateYear(db, gasData, year) {
+async function populateYear(db, year) {
   const gasYearData = {};
   try {
     const yr = `sum-${year}`;
@@ -92,7 +92,7 @@ async function populateYear(db, gasData, year) {
 
     for (let i = 0; i < res.Items.length; i++) {
       const d = res.Items[i].sk;
-      const month = d.substring(5,7);
+      const month = parseInt(d.substring(5,7));
       const day = parseInt(d.substring(8));
       if (!gasYearData[month]) gasYearData[month] = {};
       gasYearData[month][day] = { d: res.Items[i].sk, a: res.Items[i].avg, l: res.Items[i].low, h: res.Items[i].high, f: res.Items[i].avgTip };
