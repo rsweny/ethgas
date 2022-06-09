@@ -9,7 +9,7 @@ exports.handler = async function scheduled (event) {
   const gasData = await res.json();
   console.log(gasData);
 
-  if (gasData?.result?.suggestBaseFee) {
+  if (Number(gasData?.result?.suggestBaseFee)) {
     const curBaseFee = Number(gasData.result.suggestBaseFee);
     const curGasFee = Number(gasData.result.ProposeGasPrice);
     const minerTip = curGasFee - curBaseFee;
