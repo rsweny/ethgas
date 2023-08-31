@@ -1,12 +1,12 @@
 {
   "name": "ethgas",
-  "version": "0.0.0",
-  "description": "A fresh new Architect project!",
+  "version": "1.0.0",
+  "description": "Records Eth gas prices and stores in dynamoDB",
   "scripts": {
     "start": "npx sandbox"
   },
   "devDependencies": {
-    "@architect/architect": "^10.6.0"
+    "@architect/architect": "^10.14.1"
   },
   "dependencies": {
     "node-fetch": "^2.6.0"

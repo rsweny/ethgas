@@ -4,6 +4,7 @@ region ca-central-1
 memory 128
 concurrency 1
 timeout 10
+runtime nodejs16.x
 
 @app
 ethgas
