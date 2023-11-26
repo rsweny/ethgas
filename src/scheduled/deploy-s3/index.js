@@ -13,22 +13,21 @@ exports.handler = async function scheduled (event) {
   for (let i = 0; i < 24; i++) {
     gasData[i] = [];
     for (let j = 0; j < 7; j++) {
-       gasData[i].push({ a: 0, l: 0, h: 0, f: 0, p: 0 });
+       gasData[i].push({ a: 0, l: 0, h: 0, f: 0, p: 0, b: 0 });
     }
   }
   let db = await arc.tables();
   for (let i = 0; i < 7; i++) {
     await populateWeekday(db, gasData, i);
   }
-  const codeStr = `const gasYearData = {};\nconst gasData = ${JSON.stringify(gasData)};\n`;
-  await uploadFileToS3(S3_BUCKET, 'gasdata.js', Buffer.from(codeStr));
+  await uploadFileToS3(S3_BUCKET, 'gasdata.json', Buffer.from(JSON.stringify(gasData)));
   
   if (hour > 22) {
     // upload yearly summary data by day
     const year = today.getUTCFullYear();
     const gasYearData = await populateYear(db, year);
-    const codeYearStr = `gasYearData[${year}] = ${JSON.stringify(gasYearData)};\n`;
-    await uploadFileToS3(S3_BUCKET, `gasyeardata${year}.js`, Buffer.from(codeYearStr));
+    const yearStr = JSON.stringify(gasYearData);
+    await uploadFileToS3(S3_BUCKET, `gasyeardata${year}.json`, Buffer.from(yearStr));
 
     // upload daily summary data by hour
     const dateStr = today.toISOString().substring(0,10);
@@ -51,7 +50,7 @@ async function populateWeekday(db, gasData, daysAgoIndex) {
       }
     });
     for (let i = 0; i < res.Items.length; i++) {
-      gasData[res.Items[i].sk][6-daysAgoIndex] = { a: res.Items[i].avg, l: res.Items[i].low, h: res.Items[i].high, f: res.Items[i].avgTip, p: res.Items[i].peak };
+      gasData[res.Items[i].sk][6-daysAgoIndex] = { a: res.Items[i].avg, l: res.Items[i].low, h: res.Items[i].high, f: res.Items[i].avgTip, p: res.Items[i].peak, b: res.Items[i].blobFee };
     }
   } catch(e) {
     console.log('populateDay Error');
@@ -70,7 +69,7 @@ async function populateDay(db, dateStr) {
       }
     });
     for (let i = 0; i < res.Items.length; i++) {
-      gasDayData[res.Items[i].sk] = { a: res.Items[i].avg, l: res.Items[i].low, h: res.Items[i].high, f: res.Items[i].avgTip, p: res.Items[i].peak };
+      gasDayData[res.Items[i].sk] = { a: res.Items[i].avg, l: res.Items[i].low, h: res.Items[i].high, f: res.Items[i].avgTip, p: res.Items[i].peak, b: res.Items[i].blobFee };
     }
   } catch(e) {
     console.log('populateDay Error');
@@ -95,7 +94,7 @@ async function populateYear(db, year) {
       const month = parseInt(d.substring(5,7));
       const day = parseInt(d.substring(8));
       if (!gasYearData[month]) gasYearData[month] = {};
-      gasYearData[month][day] = { d: res.Items[i].sk, a: res.Items[i].avg, l: res.Items[i].low, h: res.Items[i].high, f: res.Items[i].avgTip, p: res.Items[i].peak };
+      gasYearData[month][day] = { d: res.Items[i].sk, a: res.Items[i].avg, l: res.Items[i].low, h: res.Items[i].high, f: res.Items[i].avgTip, p: res.Items[i].peak, b: res.Items[i].blobFee };
     }
   } catch(e) {
     console.log('populateYear Error');

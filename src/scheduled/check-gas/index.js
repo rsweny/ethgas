@@ -13,6 +13,7 @@ exports.handler = async function scheduled (event) {
     const curBaseFee = Number(gasData.result.suggestBaseFee);
     const curGasFee = Number(gasData.result.ProposeGasPrice);
     const minerTip = curGasFee - curBaseFee;
+    const blobFee = 0;
     
     const d = new Date();
     const today = d.toISOString().substring(0,10);
@@ -48,7 +49,8 @@ exports.handler = async function scheduled (event) {
         low,
         peak,
         avg: Math.round( curBaseFee/n + oldAvg*(n-1)/n ),
-        avgTip: Math.round( minerTip/n + oldAvgTip*(n-1)/n )
+        avgTip: Math.round( minerTip/n + oldAvgTip*(n-1)/n ),
+        blobFee
       });
     } 
     else 
@@ -62,6 +64,7 @@ exports.handler = async function scheduled (event) {
         peak: curGasFee,
         avg: curBaseFee,
         avgTip: minerTip,
+        blobFee
       });
     }
   }
@@ -83,6 +86,7 @@ async function writeDaySummary(db, d, today) {
   let sumHigh = 0;
   let sumLow = 100000;
   let peak = 0;
+  let sumBlobFee = 0;
   const numHours = summaryResult.Items.length;
   for (let i = 0; i < numHours; i++) {
     sumLow = Math.min(sumLow, summaryResult.Items[i].low);
@@ -90,9 +94,11 @@ async function writeDaySummary(db, d, today) {
     if (summaryResult.Items[i].peak > peak) peak = summaryResult.Items[i].peak;
     sumAvg += summaryResult.Items[i].avg;
     sumAvgTip += summaryResult.Items[i].avgTip;
+    sumBlobFee += summaryResult.Items[i].blobFee || 0;
   }
   sumAvg = Math.round(sumAvg / numHours);
   sumAvgTip = Math.round(sumAvgTip / numHours);
+  sumBlobFee = Math.round(sumBlobFee / numHours);
 
   await db.ethgas.put({
     pk: summaryKey,
@@ -101,6 +107,7 @@ async function writeDaySummary(db, d, today) {
     low: sumLow,
     avg: sumAvg,
     avgTip: sumAvgTip,
-    peak
+    peak,
+    blobFee: sumBlobFee
   });
 } 

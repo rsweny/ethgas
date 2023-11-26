@@ -1,5 +1,5 @@
 @aws
-profile dev
+profile default
 region ca-central-1
 memory 128
 concurrency 1
