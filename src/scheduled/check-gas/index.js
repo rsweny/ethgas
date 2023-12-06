@@ -41,7 +41,7 @@ exports.handler = async function scheduled (event) {
         await writeDaySummary(db, d, today);
       }
 
-      return db.ethgas.put({
+      const entry = {
         pk: today,
         sk: String(hour),
         count: n,
@@ -51,7 +51,9 @@ exports.handler = async function scheduled (event) {
         avg: Math.round( curBaseFee/n + oldAvg*(n-1)/n ),
         avgTip: Math.round( minerTip/n + oldAvgTip*(n-1)/n ),
         blobFee
-      });
+      };
+      console.log(entry);
+      return db.ethgas.put(entry);
     } 
     else 
     {
