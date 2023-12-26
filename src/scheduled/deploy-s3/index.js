@@ -1,5 +1,6 @@
+const { PutObjectCommand, S3Client } = require("@aws-sdk/client-s3");
+const s3 = new S3Client({});
 let arc = require('@architect/functions');
-let aws = require('aws-sdk');
 let { S3_BUCKET } = require('@architect/shared/constants');
 
 // learn more about scheduled functions here: https://arc.codes/scheduled
@@ -104,19 +105,20 @@ async function populateYear(db, year) {
 }
 
 async function uploadFileToS3(bucket, key, data) {
-  const s3 = new aws.S3({ apiVersion: '2006-03-01' });
-  const params = {
+
+  const command = new PutObjectCommand({
     Bucket : bucket,
     Key : key,
     Body : data
-  }
+  });
 
   try {
-    const response = await s3.upload(params).promise();
+    const response = await s3.send(command);
     console.log('S3 Response: ', response);
     return response;
   } catch (err) {
-    console.log(err, err.stack);
+    console.error(err, err.stack);
     return err;
   }
+
 }
