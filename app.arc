@@ -3,7 +3,7 @@ profile default
 region ca-central-1
 memory 128
 concurrency 1
-timeout 10
+timeout 15
 runtime nodejs20.x
 
 @app

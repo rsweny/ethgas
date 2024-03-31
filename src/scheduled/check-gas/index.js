@@ -1,21 +1,38 @@
 let arc = require('@architect/functions');
-const fetch = require('node-fetch');
-let { GAS_API_URL } = require('@architect/shared/constants');
+let { BLOCKNATIVE_GAS_API_URL, ETHERSCAN_GAS_API_URL } = require('@architect/shared/constants');
+
+const isNumber = (value) => {
+   return typeof value === 'number' && isFinite(value);
+}
 
 // learn more about scheduled functions here: https://arc.codes/scheduled
 exports.handler = async function scheduled (event) {
 
-  const res = await fetch(GAS_API_URL);
-  const gasData = await res.json();
-  console.log(gasData);
+  const d = new Date();
+  let curBaseFee;
+  let curGasFee;
+  let minerTip;
+  let blobFee;
+  try {
+      const headers = { "Authorization": process.env.BLOCKNATIVE_API_KEY }
+      const res = await fetch(BLOCKNATIVE_GAS_API_URL, { headers, signal: AbortSignal.timeout(3000) })
+      let gasData = await res.json();
+      console.log("base: " + gasData.blockPrices[0].baseFeePerGas + " blob: " + gasData.blockPrices[0].blobBaseFeePerGas + " tip: " + gasData.blockPrices[0].estimatedPrices[1].maxPriorityFeePerGas);
+      curBaseFee = gasData.blockPrices[0].baseFeePerGas;
+      blobFee = gasData.blockPrices[0].blobBaseFeePerGas;
+      minerTip = gasData.blockPrices[0].estimatedPrices[1].maxPriorityFeePerGas
+      curGasFee = curBaseFee + minerTip
+  } catch(e) {
+      console.log("BlockNative API err", e)
+      const res = await fetch(ETHERSCAN_GAS_API_URL);
+      gasData = await res.json();
+      console.log(gasData);
+      curBaseFee = Number(gasData.result.suggestBaseFee);
+      curGasFee = Number(gasData.result.ProposeGasPrice);
+      minerTip = curGasFee - curBaseFee;
+  }
 
-  if (Number(gasData?.result?.suggestBaseFee)) {
-    const curBaseFee = Number(gasData.result.suggestBaseFee);
-    const curGasFee = Number(gasData.result.ProposeGasPrice);
-    const minerTip = curGasFee - curBaseFee;
-    const blobFee = 0;
-    
-    const d = new Date();
+  if (isNumber(curBaseFee) && isNumber(curGasFee) && isNumber(minerTip)) {
     const today = d.toISOString().substring(0,10);
     const hour = d.getUTCHours();
     let db = await arc.tables();
@@ -32,26 +49,30 @@ exports.handler = async function scheduled (event) {
       const n = result.Items[0].count + 1;
       const oldAvg = result.Items[0].avg;
       const oldAvgTip = result.Items[0].avgTip;
+      const oldAvgBlob = result.Items[0].blobFee;
       const high = Math.max(result.Items[0].high, Math.round(curBaseFee));
       const peak = Math.max(result.Items[0].peak, Math.round(curGasFee));
       const low = Math.min(result.Items[0].low, Math.round(curBaseFee));
 
-      // once per day write a daily summary entry
-      if (hour == 23 && n == 50) {
-        await writeDaySummary(db, d, today);
+      let avg = curBaseFee/n + oldAvg*(n-1)/n;
+      let avgTip = minerTip/n + oldAvgTip*(n-1)/n;
+      blobFee = isNumber(blobFee) ? blobFee/n + oldAvgBlob*(n-1)/n : oldAvgBlob;
+      if (n > 45) {
+        avg = Math.round(avg);
+        avgTip = Math.round(avgTip);
+        blobFee = Math.round(blobFee);
+      } else {
+        avg = Math.round(avg * 100) / 100;
+        avgTip = Math.round(avgTip * 100) / 100;
+        blobFee = Math.round(blobFee * 100) / 100;
       }
 
-      const entry = {
-        pk: today,
-        sk: String(hour),
-        count: n,
-        high,
-        low,
-        peak,
-        avg: Math.round( curBaseFee/n + oldAvg*(n-1)/n ),
-        avgTip: Math.round( minerTip/n + oldAvgTip*(n-1)/n ),
-        blobFee
-      };
+      // once per day write a daily summary entry
+      if (hour == 23 && n == 50) {
+        await writeDaySummary(db, d.getUTCFullYear(), today);
+      }
+
+      const entry = { pk: today, sk: String(hour), count: n, high, low, peak, avg, avgTip, blobFee };
       console.log(entry);
       return db.ethgas.put(entry);
     } 
@@ -66,19 +87,18 @@ exports.handler = async function scheduled (event) {
         peak: curGasFee,
         avg: curBaseFee,
         avgTip: minerTip,
-        blobFee
+        blobFee: blobFee || 1
       });
     }
   }
 }
 
-async function writeDaySummary(db, d, today) {
-  const year = d.getUTCFullYear();
+async function writeDaySummary(db, year, dateStr) {
   const summaryKey = `sum-${year}`;
   let summaryResult = await db.ethgas.query({
-    KeyConditionExpression: 'pk = :today',
+    KeyConditionExpression: 'pk = :dateStr',
     ExpressionAttributeValues: {
-      ':today': today,
+      ':dateStr': dateStr,
     }
   });
 
@@ -104,7 +124,7 @@ async function writeDaySummary(db, d, today) {
 
   await db.ethgas.put({
     pk: summaryKey,
-    sk: today,
+    sk: dateStr,
     high: sumHigh,
     low: sumLow,
     avg: sumAvg,

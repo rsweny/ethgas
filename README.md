@@ -15,8 +15,9 @@ npx arc init
 ## Deploy staging
 
 1) Edit app.arc and set your AWS profile user
-2) Run "npx arc env -e staging --add ETHERSCAN_API_KEY "my_secret_key"
-3) npx arc deploy
+2) Run "npx arc env -e staging --add BLOCKNATIVE_API_KEY "my_secret_key"
+3) Run "npx arc env -e staging --add ETHERSCAN_API_KEY "my_secret_key"
+4) npx arc deploy
 
 ## Deploy prod
 

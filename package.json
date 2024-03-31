@@ -3,12 +3,12 @@
   "version": "1.0.1",
   "description": "Records Eth gas prices and stores in dynamoDB",
   "scripts": {
-    "start": "npx sandbox"
+    "start": "npx sandbox",
+    "deploy": "npx arc deploy"
   },
   "devDependencies": {
     "@architect/architect": "^10.16.3"
   },
   "dependencies": {
-    "node-fetch": "^2.6.0"
   }
 }
