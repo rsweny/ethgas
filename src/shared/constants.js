@@ -1,6 +1,6 @@
 const constants = {
  S3_BUCKET: 'gaseth',
  ETHERSCAN_GAS_API_URL: `https://api.etherscan.io/api?module=gastracker&action=gasoracle&apikey=${process.env.ETHERSCAN_API_KEY}`,
- BLOCKNATIVE_GAS_API_URL: "https://api.blocknative.com/gasprices/blockprices",
+ BLOCKNATIVE_GAS_API_URL: "https://api.blocknative.com/gasprices/blockprices", // https://explorer.blocknative.com/account
 }
 module.exports = constants;

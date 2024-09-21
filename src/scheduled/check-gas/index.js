@@ -11,17 +11,19 @@ exports.handler = async function scheduled (event) {
   const d = new Date();
   let curBaseFee;
   let curGasFee;
+  let peakFee;
   let minerTip;
-  let blobFee;
+  let blobFee = 1;
   try {
       const headers = { "Authorization": process.env.BLOCKNATIVE_API_KEY }
       const res = await fetch(BLOCKNATIVE_GAS_API_URL, { headers, signal: AbortSignal.timeout(3000) })
       let gasData = await res.json();
-      console.log("base: " + gasData.blockPrices[0].baseFeePerGas + " blob: " + gasData.blockPrices[0].blobBaseFeePerGas + " tip: " + gasData.blockPrices[0].estimatedPrices[1].maxPriorityFeePerGas);
+      console.log(gasData.currentBlockNumber + " base: " + gasData.blockPrices[0].baseFeePerGas + " blob: " + gasData.blockPrices[0].blobBaseFeePerGas + " tip: " + JSON.stringify(gasData.blockPrices[0].estimatedPrices));
       curBaseFee = gasData.blockPrices[0].baseFeePerGas;
       blobFee = gasData.blockPrices[0].blobBaseFeePerGas;
-      minerTip = gasData.blockPrices[0].estimatedPrices[1].maxPriorityFeePerGas
-      curGasFee = curBaseFee + minerTip
+      minerTip = gasData.blockPrices[0].estimatedPrices[0].maxPriorityFeePerGas*0.4 + gasData.blockPrices[0].estimatedPrices[1].maxPriorityFeePerGas*0.5;
+      curGasFee = curBaseFee + minerTip;
+      peakFee = Math.min(gasData.maxPrice, curGasFee*1000);
   } catch(e) {
       console.log("BlockNative API err", e)
       const res = await fetch(ETHERSCAN_GAS_API_URL);
@@ -30,6 +32,7 @@ exports.handler = async function scheduled (event) {
       curBaseFee = Number(gasData.result.suggestBaseFee);
       curGasFee = Number(gasData.result.ProposeGasPrice);
       minerTip = curGasFee - curBaseFee;
+      peakFee = curGasFee;
   }
 
   if (isNumber(curBaseFee) && isNumber(curGasFee) && isNumber(minerTip)) {
@@ -51,7 +54,7 @@ exports.handler = async function scheduled (event) {
       const oldAvgTip = result.Items[0].avgTip;
       const oldAvgBlob = result.Items[0].blobFee;
       const high = Math.max(result.Items[0].high, Math.round(curBaseFee));
-      const peak = Math.max(result.Items[0].peak, Math.round(curGasFee));
+      const peak = Math.max(result.Items[0].peak, Math.round(peakFee));
       const low = Math.min(result.Items[0].low, Math.round(curBaseFee));
 
       let avg = curBaseFee/n + oldAvg*(n-1)/n;
@@ -60,7 +63,7 @@ exports.handler = async function scheduled (event) {
       if (n > 45) {
         avg = Math.round(avg);
         avgTip = Math.round(avgTip);
-        blobFee = Math.round(blobFee);
+        blobFee = Math.ceil(blobFee);
       } else {
         avg = Math.round(avg * 100) / 100;
         avgTip = Math.round(avgTip * 100) / 100;
@@ -84,7 +87,7 @@ exports.handler = async function scheduled (event) {
         count: 1,
         high: Math.round(curBaseFee),
         low: Math.round(curBaseFee),
-        peak: curGasFee,
+        peak: Math.round(peakFee),
         avg: curBaseFee,
         avgTip: minerTip,
         blobFee: blobFee || 1
