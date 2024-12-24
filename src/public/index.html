@@ -64,14 +64,15 @@
 
 	<script src="year-calendar.js"></script>
 	<script>
-		const baseBlockGas = 30;
+		const baseBlockGas = 30;	// gas limit at 30M
+		const baseBlobs = 16;			// ultimate target blobs of 16 per block
 		const gasFactor = {
-			2020: 11/baseBlockGas,
-			2021: 20/baseBlockGas,
-			2022: 1,								// gas limit raised to 30M
-			2023: 1,
-			2024: (30/30)+0.2,			// blob avg: 2
-			2025: (30/30)+0.3,			// blob avg: 3
+			2020: 12/baseBlockGas,
+			2021: 22/baseBlockGas,
+			2022: 30/baseBlockGas,
+			2023: 30/baseBlockGas,
+			2024: 30/baseBlockGas + 3/baseBlobs,
+			2025: 36/baseBlockGas + 6/baseBlobs,
 		}
 		const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 		const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sept', 'Oct', 'Nov', 'Dec'];
@@ -98,17 +99,17 @@
 					const peak = obj.p ? `,  peak: ${obj.p}` : '';
 					const blob = obj.b ? `,  blob: ${obj.b}` : '';
 					const title = `high: ${obj.h},  low: ${obj.l},  tip: ${obj.f}${peak}${blob}`;
-					const { red, green, blue, alpha } = getRGBA(obj);
-					timeObj.a += obj.a/7;
-					timeObj.h += obj.h/7;
-					timeObj.l += obj.l/7;
-					timeObj.f += obj.f/7;
+					const { red, green, blue, alpha } = getRGBA(obj, gasFactor[2025]);
+					timeObj.a += obj.a/4;
+					timeObj.h += obj.h/6;
+					timeObj.l += obj.l/6;
+					timeObj.f += obj.f/6;
 					gas += `<div title="${title}" class="entry" style="background: rgba(${red}, ${green}, ${blue}, ${alpha})">${lbl}</div>`;
 				}
 				gas += `</div>`;
 				const { red, green, blue, alpha } = getRGBA(timeObj);
 				const tTitle = `avg: ${Math.round(timeObj.a)} h: ${Math.round(timeObj.h)} l: ${Math.round(timeObj.l)} tip: ${Math.round(timeObj.f)}`;
-				avgHours += `<div class="time-header" title="${tTitle}" style="width: 70px; background-image: linear-gradient(to right, rgba(${red}, ${green}, ${blue}, 0.1), rgba(${red}, ${green}, ${blue}, ${alpha}));">${i}:00</div>`;
+				avgHours += `<div class="time-header" title="${tTitle}" style="margin-right: 6px; width: 70px; background-image: linear-gradient(to right, rgba(${red}, ${green}, ${blue}, ${alpha}), rgba(${red}, ${green}, ${blue}, 0.1));">${i}:00</div>`;
 			}
 
 			for (let daysAgo = 6; daysAgo >= 0; daysAgo--) {
@@ -142,7 +143,7 @@
 						let title = `${dayOfWeek} ${obj.d} | high: ${obj.h},  low: ${obj.l},  tip: ${obj.f}`;
 						if (obj.p) title += `,  peak: ${obj.p}`;
 						if (obj.b) title += `,  blob: ${obj.b}`;
-						const dark = (red+green+blue)*alpha > 500 ? 'style="color: #222"' : '';
+						const dark = (red*1.1+green*1.5+blue)*alpha > 500 ? 'style="color: #222"' : '';
 						yearDays += `<div onclick="dayClick('${obj.d}')" title="${title}" class="year-entry" style="background: rgba(${red}, ${green}, ${blue}, ${alpha})"><span class="blend" ${dark}>${lbl}</span></div>`;
 					} else {
 						yearDays += '<div class="year-entry"></div>';
@@ -185,9 +186,9 @@
 
 		function getRGBA(obj, gasFactor = 1.5) {
 			if (!obj.b) obj.b = 0;
-			const red = Math.round(Math.min(255, Math.sqrt(obj.h)*gasFactor*10));
+			const red = Math.round(Math.min(255, Math.sqrt(obj.h+obj.b/2)*gasFactor*10));
 			const green = Math.max(255 - Math.floor((obj.b ? obj.b : obj.l)*3/gasFactor), 0);
-			const blue = Math.round(Math.min(obj.f*10, 255));
+			const blue = Math.round(Math.min(255, obj.f*10));
 			const alpha = Math.min(Math.round(Math.pow(obj.a+obj.b,0.7))/50, 1);
 			return { red, green, blue, alpha };
 		}
@@ -204,7 +205,7 @@
 				cal.setAttribute('year', y);
 				cal.id = `yc-${y}`
 				historyContainer.append(cal)
-				if (y >= 2024) {
+				if (y >= 2025) {
 					populateYearChart(y);
 				}
 			}
@@ -215,6 +216,7 @@
 			if (maxScroll <= 50 && (document.body.scrollTop > 50 || document.documentElement.scrollTop > 50)) {
 				console.log("populating older years")
 				maxScroll = 51
+				populateYearChart(2024);
 				populateYearChart(2023);
 			}
 			if (maxScroll <= 500 && (document.body.scrollTop > 500 || document.documentElement.scrollTop > 500)) {
@@ -241,13 +243,9 @@
 	</div>
 
 	<div style="display: flex; flex-direction: row; justify-content: initial">
-		<div style="margin-bottom: 21px;">
-			<div id="hoursHeader" style="display: flex; flex-direction: column; text-align: right"></div>
-		</div>
+		<div id="hoursHeader" style="display: flex; flex-direction: column; flex-grow: 0; text-align: right"></div>
 		<div style="display: flex; flex-direction: column-reverse; flex-grow: 1">
-			<div>
-				<div id="daysHeader"style="display: flex; text-align: center"></div>
-			</div>
+			<div id="daysHeader"style="display: flex; text-align: center"></div>
 			<div id="gasData" style="display: flex; flex-direction: column; flex-grow: 0"></div>
 		</div>
 	</div>

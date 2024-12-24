@@ -48,25 +48,21 @@ class YearCalendar extends HTMLElement {
           height: 1.5rem;
           line-height: 1.5rem;
           text-align: start;
-          padding-left: 12px;
+          padding-left: 8px;
           text-shadow: 1px 1px 1px #333, 0 0 6px #000;
         }
       </style>
 
-      <div style="display: flex; padding-bottom: 12px">
-        <div style="flex: 1 1 90%">
-          <div>
-            <h2 style="margin-top: 45px">Price History ${this.year}</h2>
-            <div id="yearData${this.year}"></div>
-          </div>
+      <div style="display: flex; padding-bottom: 24px">
+        <div style="flex: 1 1 100%">
+          <h2>Price History ${this.year}</h2>
+          <div id="yearData${this.year}"></div>
         </div>
-        <div id="dayPanel${this.year}" style="flex: 1 1 10%; opacity: 0">
+        <div id="dayPanel${this.year}" style="flex: 1 1 80px; opacity: 0">
           <div>
-            <h2 style="margin-top: 45px">Hourly</h2>
-            <div style="">
-              <div id="dateHoursHeader${this.year}" style="display: flex; flex-direction: column; text-align: right" />
-            </div>
-            <div id="dayData${this.year}" style="display: flex; flex-direction: column; width: 100%" />
+            <h2>Hourly</h2>
+            <div id="dateHoursHeader${this.year}" style="display: flex; flex-direction: column; text-align: right"></div>
+            <div id="dayData${this.year}" style="display: flex; flex-direction: column; width: 100%"></div>
           </div>
         </div>
       </div>

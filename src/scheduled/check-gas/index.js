@@ -21,7 +21,7 @@ exports.handler = async function scheduled (event) {
       console.log(gasData.currentBlockNumber + " base: " + gasData.blockPrices[0].baseFeePerGas + " blob: " + gasData.blockPrices[0].blobBaseFeePerGas + " tip: " + JSON.stringify(gasData.blockPrices[0].estimatedPrices));
       curBaseFee = gasData.blockPrices[0].baseFeePerGas;
       blobFee = gasData.blockPrices[0].blobBaseFeePerGas;
-      minerTip = gasData.blockPrices[0].estimatedPrices[0].maxPriorityFeePerGas*0.4 + gasData.blockPrices[0].estimatedPrices[1].maxPriorityFeePerGas*0.5;
+      minerTip = gasData.blockPrices[0].estimatedPrices[3].maxPriorityFeePerGas
       curGasFee = curBaseFee + minerTip;
       peakFee = Math.min(gasData.maxPrice, curGasFee*1000);
   } catch(e) {
